@@ -1,0 +1,3 @@
+[submodule "cpp/3dparty/nngpp"]
+	path = cpp/3dparty/nngpp
+	url = https://github.com/cwzx/nngpp.git
