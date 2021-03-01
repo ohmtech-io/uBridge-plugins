@@ -1,3 +1,6 @@
 [submodule "cpp/3dparty/nngpp"]
 	path = cpp/3dparty/nngpp
 	url = https://github.com/cwzx/nngpp.git
+[submodule "cpp/3dparty/loguru"]
+	path = cpp/3dparty/loguru
+	url = https://github.com/emilk/loguru.git
