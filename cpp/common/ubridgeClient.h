@@ -31,10 +31,8 @@
 #include <cstdio>
 #include <thread>
 
-#define LOGURU_WITH_STREAMS 1
-#include <loguru/loguru.hpp>
-#include <loguru/loguru.cpp>
-#include <nlohmann/json.hpp>
+#include <loguru.hpp>
+#include <json.hpp>
 #include <nngpp/nngpp.h>
 #include <nngpp/protocol/req0.h>
 #include <nngpp/protocol/sub0.h>
@@ -164,7 +162,7 @@ public:
  		size_t lengthWithoutNull = strlen(topic)-1;
  		char topicChArray[lengthWithoutNull];
 
- 		for (int i = 0; i < lengthWithoutNull; ++i)
+ 		for (size_t i = 0; i < lengthWithoutNull; ++i)
  		{
  			topicChArray[i] = topic[i];
  		}
