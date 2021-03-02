@@ -24,6 +24,7 @@
 
 #include "uBridgeConfig.h"
 #include "ubridgeClient.h"
+#include <cxxopts.hpp>
 
 // for convenience
 using json = nlohmann::json;

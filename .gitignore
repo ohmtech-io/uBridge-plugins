@@ -31,3 +31,5 @@
 *.out
 *.app
 cpp/influxdb/build
+ubridge-plugins.sublime-project
+sftp-config.json

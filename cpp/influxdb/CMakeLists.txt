@@ -20,6 +20,7 @@ target_include_directories(influx-plugin PUBLIC
 	"../include"
 	"../3dparty/nngpp/include"
 	"../3dparty/nlohmann"
+	"../3dparty/cxxopts/include"
 	"../3dparty")
 # target_link_libraries(ubridge -lrt -lpthread)
 target_link_libraries(influx-plugin ${LIBS})
