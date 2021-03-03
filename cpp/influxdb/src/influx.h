@@ -26,14 +26,21 @@
 #include <string>
 #include <curl/curl.h>
 
+struct influxConfig_t
+{
+	std::string url;
+	std::string dbName;	
+};
+
 class InfluxClient {
 public:
-	InfluxClient(std::string url);
+	InfluxClient(std::string url, std::string dbName);
 	int CheckReadiness(void);
 
 	int Write();
 
 private:
-	std::string _url;
+	std::string m_url;
+	std::string m_dbName;
 	CURL* curl;
 };

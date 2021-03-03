@@ -29,8 +29,9 @@
 #include "uBridgeConfig.h"
 #include "ubridgeClient.h"
 
-InfluxClient::InfluxClient(std::string url) : _url(url){
-
+InfluxClient::InfluxClient(std::string url, std::string dbName){
+	m_url = url;
+	m_dbName = dbName;
 }
 
 int InfluxClient::CheckReadiness(void) {
@@ -38,7 +39,7 @@ int InfluxClient::CheckReadiness(void) {
 	
 	curl = curl_easy_init();
 
-	curl_easy_setopt(curl, CURLOPT_URL, _url);
+	curl_easy_setopt(curl, CURLOPT_URL, m_url.c_str());
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1);	
 	/* query the "ready" endpoint */
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, "/ready");
@@ -52,7 +53,7 @@ int InfluxClient::CheckReadiness(void) {
  
 	switch (res) {
 		case CURLE_OK:
-			// LOG_S(INFO) << "Influx DB ready";
+			LOG_S(INFO) << "Influx DB ready";
 			break;
 		case CURLE_HTTP_RETURNED_ERROR:
 			break;
@@ -63,8 +64,7 @@ int InfluxClient::CheckReadiness(void) {
 		case CURLE_COULDNT_RESOLVE_HOST:
 			break;	
 		default:
-			int a=1;
-			// LOG_S(INFO) << res <<" error on request to Influx";	
+			LOG_S(INFO) << res <<" error on request to Influx";	
 	}
 
 	 /* always cleanup */ 

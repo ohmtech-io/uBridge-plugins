@@ -24,6 +24,7 @@
 #include <fstream>
 #include <iostream>
 #include <chrono>
+#include <curl/curl.h>
 
 #include <cxxopts.hpp>
 
@@ -61,7 +62,7 @@ json loadConfigFile(std::string& config_file){
 		LOG_S(WARNING) << "Error parsing json: " << ex.what();
 	}
 
-	LOG_S(1) << "Loaded configuration: "<< std::setw(2) << jconfig;
+	LOG_S(INFO) << "Loaded configuration: "<< std::setw(2) << jconfig;
 
 	return jconfig;
 }
@@ -69,16 +70,30 @@ json loadConfigFile(std::string& config_file){
 ubridge::Config loadBridgeConfig(json& jconfig) {
 	ubridge::Config config;
 	//override defaults on uBridgeConfig.h if they are present on the json file
-	if (jconfig.contains("devNameBase")) {
-		config.devNameBase = jconfig.at("devNameBase");
-	}
-
 	if (jconfig.contains("configSockUrl")) {
 		config.configSockUrl = jconfig.at("configSockUrl");
+		LOG_S(7) << "uBridge ReqRepSocket url: " << config.configSockUrl;
 	}
 
 	if (jconfig.contains("streamSockUrl")) {
 		config.streamSockUrl = jconfig.at("streamSockUrl");
+		LOG_S(7) << "uBridge Stream Socket url: " << config.streamSockUrl;
+	}
+
+	return config;
+}
+
+influxConfig_t loadInfluxConfig(json& jconfig) {
+	influxConfig_t config;
+	//override defaults on uBridgeConfig.h if they are present on the json file
+	if (jconfig.contains("url")) {
+		config.url = jconfig.at("url");
+		LOG_S(7) << "Influx url: " << config.url;
+	}
+
+	if (jconfig.contains("dbName")) {
+		config.dbName = jconfig.at("dbName");
+		LOG_S(7) << "Influx database: " << config.dbName;
 	}
 
 	return config;
@@ -86,7 +101,8 @@ ubridge::Config loadBridgeConfig(json& jconfig) {
 
 int main(int argc, char *argv[])
 {
-	cxxopts::Options options("InfluxPluggin", "This plugin app. acts as a client of ubridge, subscribing to data from the sensors and store it into an InfluxDB instance");
+	cxxopts::Options options("InfluxPluggin", "This plugin app. acts as a client of ubridge, \
+			subscribing to data from the sensors and store it into an InfluxDB instance");
 
     options.add_options()
    		("c,config", "JSON configuration file name", cxxopts::value<std::string>()->default_value("influx-plugin-config.json"))
@@ -123,28 +139,40 @@ int main(int argc, char *argv[])
 	// Only log INFO, WARNING, ERROR and FATAL
 	loguru::add_file("/tmp/ubridge-influx.log", loguru::Truncate, loguru::Verbosity_INFO);
 
-	//try to load the json file from disk...
+	//Load the json file from disk...
 	json jconfig = loadConfigFile(config_file);
 
 	//parse the uBridge config:
-	ubridge::Config bridgeConfig = loadBridgeConfig(jconfig);
+	ubridge::Config bridgeConfig = loadBridgeConfig(jconfig["ubridge"]);
+
+	influxConfig_t influxConfig = loadInfluxConfig(jconfig["influx"]);
 
 	LOG_S(INFO) << "--- Initializing ** InfluxDB plugin **... ---";
-	ReqRepClient client(bridgeConfig.configSockUrl, bridgeConfig.streamSockUrl.c_str());
+	ReqRepClient uBridgeClient{bridgeConfig.configSockUrl, bridgeConfig.streamSockUrl.c_str()};
 	
+	/* check uBridge side: */	
 	LOG_S(INFO) << "Pinging uBridge server..." ;
-	if (client.connect() != 0) {
+	if (uBridgeClient.connect() != 0) {
 		/* wait for ubridge config server */
-		LOG_S(INFO) << "Server not found!" ;	
+		LOG_S(INFO) << "uBridge Server not found!" ;	
 		LOG_S(INFO) << "Waiting for server..." ;	
-		while (client.connect() !=0) {
-			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		while (uBridgeClient.connect() !=0) {
+			std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 		}
+	}
+
+
+	/* check InfluxDB side: */
+	InfluxClient influxClient{influxConfig.url, influxConfig.dbName};
+
+	LOG_S(INFO) << "Checking for InfluxDB availability on " << influxConfig.url;
+	while (CURLE_OK != influxClient.CheckReadiness()) {
+		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 	}
 		
 	json deviceList;
 
-	client.getDevices(deviceList);
+	uBridgeClient.getDevices(deviceList);
 
 	LOG_S(INFO) << deviceList["devCount"] << " devices detected. Details:" << std::setw(2) << deviceList["devices"];	
 	// ubridge::config cfg;
@@ -157,22 +185,16 @@ int main(int argc, char *argv[])
 	json resp;
 
 	std::string chID = "uThing::VOC_9142";
-	client.queryDeviceById(chID, query, resp);
+	uBridgeClient.queryDeviceById(chID, query, resp);
 
-	client.sendCommand(chID, command, resp);
+	uBridgeClient.sendCommand(chID, command, resp);
 
-	client.getStatistics(resp);
+	uBridgeClient.getStatistics(resp);
 	LOG_S(INFO) << "Statistics:" << std::setw(2) << resp;	
 
 	//start message receiving loop...
-	client.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
-	// client.subscribe("/sensors/uThing::VOC_9142", subsMessageHandler); //specific one
-
-    // json jsoncfg;
-    // jsoncfg["maxDevices"] = 3;
-    //or
-    // jsoncfg = {{"maxDevices", 3}};
-    // jsoncfg = {{"maxDevices", 3}, {"devNameBase", "/dev/andaadormir"}};
+	uBridgeClient.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
+	// uBridgeClient.subscribe("/sensors/uThing::VOC_9142", subsMessageHandler); //specific one
 
 	return 0;
-}
+}//main

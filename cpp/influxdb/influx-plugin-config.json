@@ -11,7 +11,7 @@
 	},
 	"influx":  /* configuration for the InfluxDB side: */
 	{
-		"url" : "http://localhost:8086",/*url:port (http default: 8086)*/
+		"url" : "http://localhost:8086",/*url:port (http default: localhost:8086)*/
 		"dbName" : "sensors"/*name of the database*/
 	}
 }
