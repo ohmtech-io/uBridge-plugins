@@ -1,5 +1,5 @@
 /* --Influx Plugin configuration file--. NOTE: The format is JSON-like, with the optional comment blocks*/
-{ 
+{
 	"ubridge": /* socket configuration for the uBridge side: */
 	{
 		"configSockUrl" : "ipc:///tmp/ubridgeReqResp",/* The sockets for the Request Response Server and data Streamer*/

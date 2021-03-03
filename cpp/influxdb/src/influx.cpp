@@ -25,13 +25,19 @@
 #include <string>
 #include <cstdlib>
 #include <curl/curl.h>
+
+#include <json.hpp>
 #include "influx.h"
 #include "uBridgeConfig.h"
 #include "ubridgeClient.h"
 
-InfluxClient::InfluxClient(std::string url, std::string dbName){
-	m_url = url;
-	m_dbName = dbName;
+using json = nlohmann::json;
+
+InfluxClient::InfluxClient(influxConfig_t& config){
+	m_url = config.url;
+	m_org = config.org;
+	m_token = config.token;
+	m_bucket = config.bucket; //'database' on the API v1
 }
 
 int InfluxClient::CheckReadiness(void) {
@@ -48,12 +54,14 @@ int InfluxClient::CheckReadiness(void) {
     res = curl_easy_perform(curl);
     /* Check for errors */ 
     if(res != CURLE_OK)
-      fprintf(stderr, "curl_easy_perform() failed: %s\n",
-              curl_easy_strerror(res));
- 
+    	LOG_S(WARNING) << "Influx client: " << curl_easy_strerror(res);
+
+      // fprintf(stderr, "curl_easy_perform() failed: %s\n",
+              // curl_easy_strerror(res));
+
 	switch (res) {
 		case CURLE_OK:
-			LOG_S(INFO) << "Influx DB ready";
+			LOG_S(INFO) << "InfluxDB READY!";
 			break;
 		case CURLE_HTTP_RETURNED_ERROR:
 			break;
@@ -64,7 +72,7 @@ int InfluxClient::CheckReadiness(void) {
 		case CURLE_COULDNT_RESOLVE_HOST:
 			break;	
 		default:
-			LOG_S(INFO) << res <<" error on request to Influx";	
+			LOG_S(WARNING) << res <<" error on request to Influx";	
 	}
 
 	 /* always cleanup */ 
@@ -73,12 +81,78 @@ int InfluxClient::CheckReadiness(void) {
 	return res;
 }
 
-int	InfluxClient::Write() {
-	return 0;
-	// CURLcode curl_easy_setopt(CURL *handle, CURLOPT_TIMEOUT, long timeout);	
+int	InfluxClient::Write(std::string deviceId, json jdata) {
+	CURLcode res;
+	struct curl_slist *list = NULL;
+	
+	/*TODO:
+		- pull data from thread safe queue
+		- add a batchSize config. so we can write N datapoints per call (ideal size from Influx docs is 5000)
+		*/
+	curl = curl_easy_init();
+	
+	std::string urlRequest = m_url
+		+ "/api/v2/write?org=" + m_org 
+		+ "&bucket=" + m_bucket;
+		//+ "&precision=ms"; 
+
+	curl_easy_setopt(curl, CURLOPT_URL, urlRequest.c_str());
+	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 1);	
+
+	std::string header = "Authorization: Token " + m_token;
+	list = curl_slist_append(list, header.c_str());
+  	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, list);
+
+  	
+	// std::string data = "sensor1 temperature=25.49";
+	std::string data = ConvertToLineProtocol(deviceId, jdata);
+
+	curl_easy_setopt(curl, 
+		CURLOPT_POSTFIELDS, 
+		data.c_str());
+
+	LOG_S(7) << "InfluxDB Request:  " << urlRequest;
+	/* Perform the request, res will get the return code */ 
+    res = curl_easy_perform(curl);
+
+	if(res != CURLE_OK)
+    	LOG_S(WARNING) << "Influx client: " << curl_easy_strerror(res);
+    else 
+    	LOG_S(6) << "Data written to Influx: " << data;
+	 /* always cleanup */ 
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(list); 
+
+	return res;
+}
+
+std::string InfluxClient::ConvertToLineProtocol(std::string& deviceId, json& jdata) {
+	/* Line protocol fields in [] are optional:
+	 _measurement[,_tagKey=tagValue] _field=_value [_timestamp]
+	 examples: 
+	 "outdoorSensor1 temperature=21.08"
+	 "outdoorSensor,location=frontDoor temperature=21.08 1566086760000000000"*/
+	std::string line;
+	line += deviceId; //Measurement
+	line += " ";
+	line += "noise.peak"; //Field
+	line += "=";
+	line += "48.62";
+
+	// LOG_S(INFO) << line;
+	return line;
 }
 
 
+/*
+
+curl --request POST "http://localhost:8086/api/v2/write?org=dev&bucket=sensors&precision=ms" \
+--header "Authorization: Token hHyrHUzvi6NzcWeofzly2CCwmWOEY95uK5ZIAj3wrlq8ndcMYPo1M8eOHaqzIramO11gwK9jdXJoDHLlFXci8g==" \
+--data-raw "
+sensor1 temperature=10.1234
+" -v
+
+*/
 
 
 

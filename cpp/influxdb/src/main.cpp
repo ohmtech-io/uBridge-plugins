@@ -91,10 +91,21 @@ influxConfig_t loadInfluxConfig(json& jconfig) {
 		LOG_S(7) << "Influx url: " << config.url;
 	}
 
-	if (jconfig.contains("dbName")) {
-		config.dbName = jconfig.at("dbName");
-		LOG_S(7) << "Influx database: " << config.dbName;
+	if (jconfig.contains("org")) {
+		config.org = jconfig.at("org");
+		LOG_S(7) << "Influx org: " << config.org;
 	}
+
+	if (jconfig.contains("token")) {
+		config.token = jconfig.at("token");
+		LOG_S(7) << "Influx user Auth Token: " << config.token;
+	}
+
+	if (jconfig.contains("bucket")) {
+		config.bucket = jconfig.at("bucket");
+		LOG_S(7) << "Influx bucket (db): " << config.bucket;
+	}
+
 
 	return config;
 }
@@ -139,17 +150,18 @@ int main(int argc, char *argv[])
 	// Only log INFO, WARNING, ERROR and FATAL
 	loguru::add_file("/tmp/ubridge-influx.log", loguru::Truncate, loguru::Verbosity_INFO);
 
+	LOG_S(INFO) << "--- Initializing ** InfluxDB plugin **... ---";
+
 	//Load the json file from disk...
 	json jconfig = loadConfigFile(config_file);
 
 	//parse the uBridge config:
 	ubridge::Config bridgeConfig = loadBridgeConfig(jconfig["ubridge"]);
-
+	//parse the Influx config:
 	influxConfig_t influxConfig = loadInfluxConfig(jconfig["influx"]);
 
-	LOG_S(INFO) << "--- Initializing ** InfluxDB plugin **... ---";
-	ReqRepClient uBridgeClient{bridgeConfig.configSockUrl, bridgeConfig.streamSockUrl.c_str()};
-	
+
+	ReqRepClient uBridgeClient{bridgeConfig.configSockUrl, bridgeConfig.streamSockUrl.c_str()};	
 	/* check uBridge side: */	
 	LOG_S(INFO) << "Pinging uBridge server..." ;
 	if (uBridgeClient.connect() != 0) {
@@ -161,23 +173,22 @@ int main(int argc, char *argv[])
 		}
 	}
 
-
 	/* check InfluxDB side: */
-	InfluxClient influxClient{influxConfig.url, influxConfig.dbName};
+	InfluxClient influxClient{influxConfig};
 
 	LOG_S(INFO) << "Checking for InfluxDB availability on " << influxConfig.url;
 	while (CURLE_OK != influxClient.CheckReadiness()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 	}
+
+	//DM testing
+
+	influxClient.Write("testDev", jconfig);
 		
 	json deviceList;
-
 	uBridgeClient.getDevices(deviceList);
 
 	LOG_S(INFO) << deviceList["devCount"] << " devices detected. Details:" << std::setw(2) << deviceList["devices"];	
-	// ubridge::config cfg;
-	// cfg.maxDevices = 2;
-	// json jsoncfg = cfg;
 	
 	json query = "{\"status\":true}"_json;
 	json command = "{\"led\":true}"_json;

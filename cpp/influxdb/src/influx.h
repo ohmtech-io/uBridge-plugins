@@ -42,6 +42,7 @@ public:
 	int CheckReadiness(void);
 
 	int Write(std::string deviceId, nlohmann::json jdata);
+	std::string ConvertToLineProtocol(std::string& deviceId, nlohmann::json& jdata);
 
 private:
 	std::string m_url;
