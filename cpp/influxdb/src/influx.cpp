@@ -130,15 +130,29 @@ std::string InfluxClient::ConvertToLineProtocol(std::string& deviceId, json& jda
 	/* Line protocol fields in [] are optional:
 	 _measurement[,_tagKey=tagValue] _field=_value [_timestamp]
 	 examples: 
-	 "outdoorSensor1 temperature=21.08"
+	 "outdoorSensor1 temperature=21.08, humidity=56.31"
 	 "outdoorSensor,location=frontDoor temperature=21.08 1566086760000000000"*/
+	json flat_jdata = jdata.flatten();
+	
+
 	std::string line;
 	line += deviceId; //Measurement
 	line += " ";
-	line += "noise.peak"; //Field
+	line += "noise.peak"; //Field1
 	line += "=";
 	line += "48.62";
+	line += ",";
+	line += "noise.rms"; //Field2
+	line += "=";
+	line += "43.42";
 
+	json jtest = R"({"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}})"_json;
+	LOG_S(INFO) << jtest;
+	LOG_S(INFO) << jtest.flatten();
+
+	json jtest2 = R"({"IAQ": 45.5,"eqBreathVOC": 0.68,"eqCO2": 583.06,"gasResistance": 2235196,"humidity": 33.33,"iaqAccuracy": 3,"pressure": 1015.63,"temperature": 24.9})"_json;
+	LOG_S(INFO) << jtest2;
+	LOG_S(INFO) << jtest2.flatten();
 	// LOG_S(INFO) << line;
 	return line;
 }
@@ -154,5 +168,37 @@ sensor1 temperature=10.1234
 
 */
 
+/*
+{
+  "IAQ": 45.5,
+  "eqBreathVOC": 0.68,
+  "eqCO2": 583.06,
+  "gasResistance": 2235196,
+  "humidity": 33.33,
+  "iaqAccuracy": 3,
+  "pressure": 1015.63,
+  "temperature": 24.9
+}
 
+{
+	"noise": {
+		"rms": 33.5,
+		"peak": 33.5,
+		"base": 30.4
+	},
+	"pir": {
+		"detections": 0,
+		"detPerHour": 6
+	},
+	"light": {
+		"last": 58.13,
+		"average": 51.67
+	}
+}
+
+{"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}}
+
+after json.flatten():
+ {"/light/average":51.67,"/light/last":58.13,"/noise/base":30.4,"/noise/peak":33.5,"/noise/rms":33.5,"/pir/detPerHour":6,"/pir/detections":0}
+*/
 

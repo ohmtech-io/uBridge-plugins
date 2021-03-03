@@ -74,7 +74,6 @@ ubridge::Config loadBridgeConfig(json& jconfig) {
 		config.configSockUrl = jconfig.at("configSockUrl");
 		LOG_S(7) << "uBridge ReqRepSocket url: " << config.configSockUrl;
 	}
-
 	if (jconfig.contains("streamSockUrl")) {
 		config.streamSockUrl = jconfig.at("streamSockUrl");
 		LOG_S(7) << "uBridge Stream Socket url: " << config.streamSockUrl;
@@ -85,27 +84,23 @@ ubridge::Config loadBridgeConfig(json& jconfig) {
 
 influxConfig_t loadInfluxConfig(json& jconfig) {
 	influxConfig_t config;
-	//override defaults on uBridgeConfig.h if they are present on the json file
+	
 	if (jconfig.contains("url")) {
 		config.url = jconfig.at("url");
 		LOG_S(7) << "Influx url: " << config.url;
 	}
-
 	if (jconfig.contains("org")) {
 		config.org = jconfig.at("org");
 		LOG_S(7) << "Influx org: " << config.org;
 	}
-
 	if (jconfig.contains("token")) {
 		config.token = jconfig.at("token");
 		LOG_S(7) << "Influx user Auth Token: " << config.token;
 	}
-
 	if (jconfig.contains("bucket")) {
 		config.bucket = jconfig.at("bucket");
 		LOG_S(7) << "Influx bucket (db): " << config.bucket;
 	}
-
 
 	return config;
 }
@@ -190,18 +185,18 @@ int main(int argc, char *argv[])
 
 	LOG_S(INFO) << deviceList["devCount"] << " devices detected. Details:" << std::setw(2) << deviceList["devices"];	
 	
-	json query = "{\"status\":true}"_json;
-	json command = "{\"led\":true}"_json;
-	// json query = "{\"led\":false}"_json;
-	json resp;
+	// json query = "{\"status\":true}"_json;
+	// json command = "{\"led\":true}"_json;
+	// // json query = "{\"led\":false}"_json;
+	// json resp;
 
-	std::string chID = "uThing::VOC_9142";
-	uBridgeClient.queryDeviceById(chID, query, resp);
+	// std::string chID = "uThing::VOC_9142";
+	// uBridgeClient.queryDeviceById(chID, query, resp);
 
-	uBridgeClient.sendCommand(chID, command, resp);
+	// uBridgeClient.sendCommand(chID, command, resp);
 
-	uBridgeClient.getStatistics(resp);
-	LOG_S(INFO) << "Statistics:" << std::setw(2) << resp;	
+	// uBridgeClient.getStatistics(resp);
+	// LOG_S(INFO) << "Statistics:" << std::setw(2) << resp;	
 
 	//start message receiving loop...
 	uBridgeClient.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
