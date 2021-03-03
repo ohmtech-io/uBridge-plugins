@@ -26,21 +26,27 @@
 #include <string>
 #include <curl/curl.h>
 
+#include <json.hpp>
+
 struct influxConfig_t
 {
 	std::string url;
-	std::string dbName;	
+	std::string org;
+	std::string token;	
+	std::string bucket;	
 };
 
 class InfluxClient {
 public:
-	InfluxClient(std::string url, std::string dbName);
+	InfluxClient(influxConfig_t&);
 	int CheckReadiness(void);
 
-	int Write();
+	int Write(std::string deviceId, nlohmann::json jdata);
 
 private:
 	std::string m_url;
-	std::string m_dbName;
+	std::string m_org;
+	std::string m_token;
+	std::string m_bucket;
 	CURL* curl;
 };
