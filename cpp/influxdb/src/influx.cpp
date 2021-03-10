@@ -136,13 +136,13 @@ std::string InfluxClient::Reformat(std::string key) {
 }
 
 std::string InfluxClient::ConvertToLineProtocol(std::string& deviceId, json& jdata) {
-	/* Line protocol fields in [] are optional:
+	/* LINE Protocol, fields in [] are optional:
 	 _measurement[,_tagKey=tagValue] _field=_value [_timestamp]
 	 examples: 
 	 "outdoorSensor1 temperature=21.08, humidity=56.31"
 	 "outdoorSensor,location=frontDoor temperature=21.08 1566086760000000000"*/
 
-	jdata = R"({"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}})"_json;
+	// jdata = R"({"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}})"_json;
 	json flat_jdata = jdata.flatten();
 	/* Flat the entire json objects so we can easily iterate it, 
 	for example:
@@ -157,66 +157,12 @@ std::string InfluxClient::ConvertToLineProtocol(std::string& deviceId, json& jda
 
 	for (auto& [key, value] : flat_jdata.items()) {
   		LOG_S(9) << key << " : " << value;
-  		line += Reformat(key) + "=" + value.dump() + ",";//Field/s
+  		line += Reformat(key) + "=" + value.dump() + ","; //Field/s
 	}
 
-	line.erase(line.end()-1); //remove the trailing ","
+	line.erase(line.end() - 1); //remove the trailing ","
 
 	LOG_S(6) << line;
 
-	// line += "noise.peak"; //Field1
-	// line += "=";
-	// line += "48.62";
-	// line += ",";
-	// line += "noise.rms"; //Field2
-	// line += "=";
-	// line += "43.42";
-
 	return line;
 }
-
-
-/*
-
-curl --request POST "http://localhost:8086/api/v2/write?org=dev&bucket=sensors&precision=ms" \
---header "Authorization: Token hHyrHUzvi6NzcWeofzly2CCwmWOEY95uK5ZIAj3wrlq8ndcMYPo1M8eOHaqzIramO11gwK9jdXJoDHLlFXci8g==" \
---data-raw "
-sensor1 temperature=10.1234
-" -v
-
-*/
-
-/*
-{
-  "IAQ": 45.5,
-  "eqBreathVOC": 0.68,
-  "eqCO2": 583.06,
-  "gasResistance": 2235196,
-  "humidity": 33.33,
-  "iaqAccuracy": 3,
-  "pressure": 1015.63,
-  "temperature": 24.9
-}
-
-{
-	"noise": {
-		"rms": 33.5,
-		"peak": 33.5,
-		"base": 30.4
-	},
-	"pir": {
-		"detections": 0,
-		"detPerHour": 6
-	},
-	"light": {
-		"last": 58.13,
-		"average": 51.67
-	}
-}
-
-{"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}}
-
-after json.flatten():
- {"/light/average":51.67,"/light/last":58.13,"/noise/base":30.4,"/noise/peak":33.5,"/noise/rms":33.5,"/pir/detPerHour":6,"/pir/detections":0}
-*/
-

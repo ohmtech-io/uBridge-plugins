@@ -36,9 +36,22 @@
 using json = nlohmann::json;
 
 ubridge::Config cfg;
+InfluxClient* pInfluxClient; 
 
 void subsMessageHandler(ubridge::message& message) {
-	LOG_S(9) << "cb msg" << message.topic << message.data ;
+	LOG_S(9) << "cb msg: " << message.topic << message.data ;
+
+	std::string deviceId = message.topic;
+	
+	std::string prefix = "/sensors/";
+	std::string::size_type i = deviceId.find(prefix);
+
+	if (i != std::string::npos){
+		deviceId.erase(i, prefix.length());
+ 	}
+
+ 	LOG_S(9) << "deviceId: " << deviceId;
+	pInfluxClient->Write(deviceId, message.data);
 }
 
 json loadConfigFile(std::string& config_file){
@@ -177,27 +190,14 @@ int main(int argc, char *argv[])
 	}
 
 	//DM testing
-
-	influxClient.Write("testDev", jconfig);
+	pInfluxClient = &influxClient;
+	// influxClient.Write("testDev", jconfig);
 		
 	json deviceList;
 	uBridgeClient.getDevices(deviceList);
 
 	LOG_S(INFO) << deviceList["devCount"] << " devices detected. Details:" << std::setw(2) << deviceList["devices"];	
 	
-	// json query = "{\"status\":true}"_json;
-	// json command = "{\"led\":true}"_json;
-	// // json query = "{\"led\":false}"_json;
-	// json resp;
-
-	// std::string chID = "uThing::VOC_9142";
-	// uBridgeClient.queryDeviceById(chID, query, resp);
-
-	// uBridgeClient.sendCommand(chID, command, resp);
-
-	// uBridgeClient.getStatistics(resp);
-	// LOG_S(INFO) << "Statistics:" << std::setw(2) << resp;	
-
 	//start message receiving loop...
 	uBridgeClient.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
 	// uBridgeClient.subscribe("/sensors/uThing::VOC_9142", subsMessageHandler); //specific one
