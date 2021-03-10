@@ -124,12 +124,12 @@ int main(int argc, char *argv[])
 			subscribing to data from the sensors and store it into an InfluxDB instance");
 
     options.add_options()
-   		("c,config", "JSON configuration file name", cxxopts::value<std::string>()->default_value("influx-plugin-config.json"))
+   		("c,config", "JSON configuration file name", cxxopts::value<std::string>()->default_value("/etc/ubridge/influx-plugin-config.json"))
         ("v,verbose", "Verbosity output level (0-9)", cxxopts::value<int>()->default_value("0"))
         ("h,help", "Print usage")
     ;
 
-    std::string config_file = "influx-plugin-config.json";
+    std::string config_file;
 
     try {
     	auto result = options.parse(argc, argv);
@@ -143,9 +143,9 @@ int main(int argc, char *argv[])
     		loguru::g_stderr_verbosity = result["verbose"].as<int>();
     	}
 
-    	if (result.count("config")) {
-      		config_file = result["config"].as<std::string>();
-    	}
+    	//if no config provided with -c, use default on /etc/ubridge
+  		config_file = result["config"].as<std::string>();
+    	
     }
     catch (const cxxopts::OptionException& e) {
 		std::cout << "error parsing options: " << e.what() << std::endl;
