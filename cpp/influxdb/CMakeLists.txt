@@ -16,7 +16,6 @@ add_executable(influx-plugin
 	../3dparty/loguru/loguru.cpp
 	src/main.cpp
 	src/influx.cpp
-	influx-plugin-config.json
 )
 
 # target_compile_options(ubridge PUBLIC -Wall)
@@ -31,6 +30,7 @@ target_link_libraries(influx-plugin ${LIBS})
 
 install(TARGETS influx-plugin DESTINATION bin COMPONENT binaries)
 install(FILES influx-plugin-config.json DESTINATION /etc/ubridge COMPONENT config)
+install(FILES ubridge-influx-plugin.service DESTINATION /etc/systemd/system/ COMPONENT service)
 
 # add_executable(consumer
 # 	src/consumer.cpp

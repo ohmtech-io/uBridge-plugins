@@ -152,8 +152,8 @@ int main(int argc, char *argv[])
 		exit(1);
 	}
 
-	loguru::g_preamble_date = false;
-	loguru::g_preamble_time = false;
+	// loguru::g_preamble_date = false;
+	// loguru::g_preamble_time = false;
 	loguru::init(argc, argv);
 	// Only log INFO, WARNING, ERROR and FATAL
 	loguru::add_file("/tmp/ubridge-influx.log", loguru::Truncate, loguru::Verbosity_INFO);
