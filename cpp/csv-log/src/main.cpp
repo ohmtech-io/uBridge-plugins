@@ -189,7 +189,6 @@ int main(int argc, char *argv[])
 	LOG_S(INFO) << "Start logging CSV data into " << csvConfig.logPath << "/*.csv...";
 	//start message receiving loop...
 	uBridgeClient.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
-	// uBridgeClient.subscribe("/sensors/uThing::VOC_9142", subsMessageHandler); //specific one
-
+	
 	return 0;
 }//main

@@ -67,9 +67,9 @@ std::string CsvLogger::GetCurrentTimeForLogging()
     std::stringstream ss;
 
     if (m_useGmtTime) {
-    	ss << std::put_time(std::gmtime(&time), "%F_%TZ"); //ISO 8601, expressed in UTC.
+    	ss << std::put_time(std::gmtime(&time), "%FT%TZ"); //ISO 8601, expressed in UTC.
     } else {
-		ss << std::put_time(std::localtime(&time), "%F_%T"); //ISO 8601 without timezone information.
+		ss << std::put_time(std::localtime(&time), "%FT%T"); //ISO 8601 without timezone information.
     }
     auto s = ss.str();
     return s;
@@ -107,7 +107,7 @@ long CsvLogger::GetTimestampInMs()
 	return (std::chrono::time_point_cast<std::chrono::milliseconds>(now).time_since_epoch().count());
 }
 
-int	CsvLogger::Write(std::string deviceId, json jdata) 
+int CsvLogger::Write(std::string deviceId, json jdata) 
 {	
 	if (devices.find(deviceId) == devices.end()) {
 		/* the device doesn't exist (first time seen)*/	
@@ -208,15 +208,8 @@ std::string CsvLogger::GetCommaSeparatedValues(json& jdata) {
 }
 
 std::string CsvLogger::GetFormatHeader(json& jdata) {
-
-	// jdata = R"({"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}})"_json;
 	json flat_jdata = jdata.flatten();
-	/* Flat the entire json objects so we can easily iterate it, 
-	for example:
-		{"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}}
-	after json.flatten():
- 		{"/light/average":51.67,"/light/last":58.13,"/noise/base":30.4,"/noise/peak":33.5,"/noise/rms":33.5,"/pir/detPerHour":6,"/pir/detections":0}
-	*/
+
 	std::string line;
 
 	for (auto& [key, value] : flat_jdata.items()) {

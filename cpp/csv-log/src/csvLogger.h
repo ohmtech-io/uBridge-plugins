@@ -26,9 +26,7 @@
 #include <string>
 #include <filesystem>
 #include <fstream>
-
 #include <json.hpp>
-
 
 struct csvConfig_t
 {
@@ -43,7 +41,6 @@ struct csvConfig_t
 
 struct uThing_t
 {
-	// std::string deviceId;
 	std::filesystem::path filePath;
 	std::ofstream streamFile;
 	std::chrono::time_point<std::chrono::system_clock> startTime;
@@ -53,24 +50,19 @@ struct uThing_t
 class CsvLogger {
 public:
 	CsvLogger(csvConfig_t&);
-	// int CheckReadiness(void);
-
 	int Write(std::string deviceId, nlohmann::json jdata);
 
 private:
 	int CreateFile(uThing_t* uThing, std::string deviceId);
-	std::string GetCurrentTimeForFileName();
-	std::string GetCurrentTimeForLogging();
-	
-	void WriteHeader(uThing_t* uThing, json& jdata);
-	std::string GetCommaSeparatedValues(nlohmann::json& jdata);
+	void WriteHeader(uThing_t* uThing, nlohmann::json& jdata);
 	std::filesystem::path AppendTimeToFileName(const std::filesystem::path& fileName);
 	std::filesystem::path GetFullPath(std::string deviceId);
-	long GetTimestampInMs();
+	std::string GetCurrentTimeForFileName();
+	std::string GetCurrentTimeForLogging();
+	std::string GetCommaSeparatedValues(nlohmann::json& jdata);
 	std::string GetFormatHeader(nlohmann::json& jdata);
+	long GetTimestampInMs();
 	std::string ReformatKey(std::string key);
-
-
 
 private:
 	std::string m_logPath;
