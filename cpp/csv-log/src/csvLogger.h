@@ -25,6 +25,7 @@
 
 #include <string>
 #include <filesystem>
+#include <fstream>
 
 #include <json.hpp>
 
@@ -44,6 +45,7 @@ struct uThing_t
 {
 	// std::string deviceId;
 	std::filesystem::path filePath;
+	std::ofstream streamFile;
 	std::chrono::time_point<std::chrono::system_clock> startTime;
 	int datapointsWritten = 0;
 };
@@ -56,10 +58,16 @@ public:
 	int Write(std::string deviceId, nlohmann::json jdata);
 
 private:
+	int CreateFile(std::string deviceId, nlohmann::json jdata);
 	std::string GetCurrentTimeForFileName();
+	std::string GetCurrentTimeForLogging();
+
+	std::string GetCommaSeparatedValues(nlohmann::json& jdata);
 	std::filesystem::path AppendTimeToFileName(const std::filesystem::path& fileName);
 	std::filesystem::path GetFullPath(std::string deviceId);
 	long GetTimestampInMs();
+	std::string GetFormatHeader(nlohmann::json& jdata);
+	std::string ReformatKey(std::string key);
 
 
 
@@ -67,5 +75,6 @@ private:
 	std::string m_logPath;
 	int m_maxDatapointsPerFile;
 	bool m_useGmtTime;
+	bool m_outTimestampInMs;
 	std::map<std::string, uThing_t> devices;
 };

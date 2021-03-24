@@ -43,6 +43,7 @@ CsvLogger::CsvLogger(csvConfig_t& config){
 	m_logPath = config.logPath;
 	m_maxDatapointsPerFile = config.maxDatapointsPerFile;
 	m_useGmtTime = config.useGmtTime;
+	m_outTimestampInMs = config.outTimestampInMs;
 }
 
 std::string CsvLogger::GetCurrentTimeForFileName()
@@ -57,6 +58,20 @@ std::string CsvLogger::GetCurrentTimeForFileName()
     }
     auto s = ss.str();
     std::replace(s.begin(), s.end(), ':', '-');
+    return s;
+}
+
+std::string CsvLogger::GetCurrentTimeForLogging()
+{
+    auto time = std::time(nullptr);
+    std::stringstream ss;
+
+    if (m_useGmtTime) {
+    	ss << std::put_time(std::gmtime(&time), "%F_%TZ"); //ISO 8601, expressed in UTC.
+    } else {
+		ss << std::put_time(std::localtime(&time), "%F_%T"); //ISO 8601 without timezone information.
+    }
+    auto s = ss.str();
     return s;
 }
 
@@ -96,26 +111,106 @@ int	CsvLogger::Write(std::string deviceId, json jdata)
 {	
 	if (devices.find(deviceId) == devices.end()) {
 		/* the device doesn't exist (first time seen)*/
-		uThing_t uThing;
-
-		uThing.filePath = GetFullPath(deviceId);
-
-		LOG_S(INFO) << "New device detected, writing data in: "<< uThing.filePath;
-
-		uThing.startTime = std::chrono::system_clock::now();
-
-
-
-		devices.emplace(deviceId, std::move(uThing));
+		CreateFile(deviceId, jdata);
 	} 
 
-	LOG_S(7) << "data" << jdata;
+	LOG_S(9) << "data" << jdata;
+	LOG_S(INFO) << GetCommaSeparatedValues(jdata);
 
 	// we need to make a list with the deviceIds
 	// then compose a csv file name with devId+datetime
 	// if this file exist, append data 
  // 	else, create file and add the format on the first line ie [noise_rms], [noise_peak], [noise_base], [pir_detections], [pir_lastHourD], [light_last], [light_average]
 
-	return 1;
+	return 0;
+}
+
+int CsvLogger::CreateFile(std::string deviceId, json jdata)
+{
+	uThing_t uThing;
+
+	uThing.filePath = GetFullPath(deviceId);
+
+	LOG_S(INFO) << "New device detected, writing data in: "<< uThing.filePath;
+
+	uThing.startTime = std::chrono::system_clock::now();
+
+	try {
+		fs::create_directory(m_logPath);
+	}
+	catch (const std::exception& ex) {
+		LOG_S(WARNING) << "Error trying to create the configured directory: " << ex.what();
+	}
+
+	std::string dataHeader = GetFormatHeader(jdata);
+	LOG_S(5) << "CSV Data Header: "<< dataHeader;
+
+	uThing.streamFile.open (uThing.filePath);
+	uThing.streamFile << dataHeader;
+	uThing.streamFile.close();
+
+	devices.emplace(deviceId, std::move(uThing));
+
+	return 0;
+}
+
+std::string CsvLogger::GetCommaSeparatedValues(json& jdata) {
+
+	// jdata = R"({"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}})"_json;
+	json flat_jdata = jdata.flatten();
+	/* Flat the entire json objects so we can easily iterate it, 
+	for example:
+		{"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}}
+	after json.flatten():
+ 		{"/light/average":51.67,"/light/last":58.13,"/noise/base":30.4,"/noise/peak":33.5,"/noise/rms":33.5,"/pir/detPerHour":6,"/pir/detections":0}
+	*/
+	std::string line;
+
+	for (auto& [key, value] : flat_jdata.items()) {
+  		line += value.dump() + ","; //Field/s
+	}
+
+	//Add timestamp depending on the configured format:
+	if (m_outTimestampInMs) {
+		line += std::to_string(GetTimestampInMs());
+	} else {
+		line += GetCurrentTimeForLogging();
+	}
+
+	LOG_S(6) << "CSV data: "<< line;
+
+	return line;
+}
+
+std::string CsvLogger::GetFormatHeader(json& jdata) {
+
+	// jdata = R"({"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}})"_json;
+	json flat_jdata = jdata.flatten();
+	/* Flat the entire json objects so we can easily iterate it, 
+	for example:
+		{"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}}
+	after json.flatten():
+ 		{"/light/average":51.67,"/light/last":58.13,"/noise/base":30.4,"/noise/peak":33.5,"/noise/rms":33.5,"/pir/detPerHour":6,"/pir/detections":0}
+	*/
+	std::string line;
+
+	for (auto& [key, value] : flat_jdata.items()) {
+  		LOG_S(9) << key;
+  		line += ReformatKey(key)+","; //Field/s
+	}
+	line += "timestamp\n";
+
+	LOG_S(4) << "CSV header: "<< line;
+
+	return line;
+}
+
+std::string CsvLogger::ReformatKey(std::string key) {
+	//example flattened keys: "/light/average", "/temperature"
+	key.erase(key.begin()); //erase the 1st char ("/")
+
+	replace(key.begin(), key.end(), '/', '.' );
+
+	return key;
 }
 
