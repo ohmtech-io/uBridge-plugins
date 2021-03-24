@@ -1,0 +1,19 @@
+/* --CSV Plugin configuration file--. NOTE: The format is JSON-like, with the optional comment blocks*/
+{
+	"ubridge": /* socket configuration for the uBridge side: */
+	{
+		"configSockUrl" : "ipc:///tmp/ubridgeReqResp",/* The sockets for the Request Response Server and data Streamer*/
+		"streamSockUrl" : "ipc:///tmp/ubridgeStream"/* If the client app runs in the same machine, IPC is 
+						more efficient. If a different host is used (as with a client running in a Docker instance)
+						use TCP host:port ("tcp://localhost:8001")*/
+	},
+	"csv":  /* configuration for the InfluxDB side: */
+	{
+		"logPath" : "/tmp/ubridgeCsv",/* The base path for storing the CSV files*/
+		"maxDatapointsPerFile" : 10000,/* Limit the logged data to a manageable size
+									when this limit is reached, a new file is created */
+		"useGmtTime" : true,/* if false will use localtime*/
+		"outTimestampInMs" : true/* default timestapmp format is unix epoch in milliseconds, 
+	 						if false use date-time (UTC or local depending on "useGmtTime" */
+	}
+}
