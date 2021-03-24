@@ -18,29 +18,18 @@ add_executable(influx-plugin
 	src/influx.cpp
 )
 
-# target_compile_options(ubridge PUBLIC -Wall)
 target_include_directories(influx-plugin PUBLIC 
 	"../common"
 	"../3dparty/nngpp/include"
 	"../3dparty/nlohmann"
 	"../3dparty/cxxopts/include"
 	"../3dparty/loguru")
-# target_link_libraries(ubridge -lrt -lpthread)
+
 target_link_libraries(influx-plugin ${LIBS})
 
 install(TARGETS influx-plugin DESTINATION bin COMPONENT binaries)
 install(FILES influx-plugin-config.json DESTINATION /etc/ubridge COMPONENT config)
 install(FILES ubridge-influx-plugin.service DESTINATION /etc/systemd/system/ COMPONENT service)
-
-# add_executable(consumer
-# 	src/consumer.cpp
-# )
-
-# target_compile_options(consumer PUBLIC -Wall)
-# target_include_directories(consumer PUBLIC "include")
-# target_link_libraries(consumer ${LIBS})
-
-
 
 #  cd build && cmake -GNinja ..
 #  ninja

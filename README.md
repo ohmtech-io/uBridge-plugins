@@ -1,16 +1,14 @@
 # ubridge-plugins
-Client applications which acts as plugins for the uBridge server
+Client applications that acts as plugins for the uBridge server
 
-##Dependencies
+## Dependencies
 
 sudo apt-get install libcurl-dev (TODO: specific versions on Ubunty and RPi, find common?)
 
 ## Building
 
 mkdir build 
-<!-- cd build && cmake -GNinja .. -->
 
-<!-- or just: -->
 cd build && cmake ..
 make
 

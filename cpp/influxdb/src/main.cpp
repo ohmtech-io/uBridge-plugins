@@ -131,29 +131,27 @@ int main(int argc, char *argv[])
 
     std::string config_file;
 
-    try {
-    	auto result = options.parse(argc, argv);
+	try {
+		auto result = options.parse(argc, argv);
 
-    	if (result.count("help")) {
-      		std::cout << options.help() << std::endl;
-      		exit(0);
-    	}
+		if (result.count("help")) {
+	  		std::cout << options.help() << std::endl;
+	  		exit(0);
+		}
 
-    	if (result.count("verbose")) {
-    		loguru::g_stderr_verbosity = result["verbose"].as<int>();
-    	}
+		if (result.count("verbose")) {
+			loguru::g_stderr_verbosity = result["verbose"].as<int>();
+		}
 
-    	//if no config provided with -c, use default on /etc/ubridge
-  		config_file = result["config"].as<std::string>();
-    	
-    }
-    catch (const cxxopts::OptionException& e) {
+		//if no config provided with -c, use default on /etc/ubridge
+			config_file = result["config"].as<std::string>();
+		
+	}
+	catch (const cxxopts::OptionException& e) {
 		std::cout << "error parsing options: " << e.what() << std::endl;
 		exit(1);
 	}
 
-	// loguru::g_preamble_date = false;
-	// loguru::g_preamble_time = false;
 	loguru::init(argc, argv);
 	// Only log INFO, WARNING, ERROR and FATAL
 	loguru::add_file("/tmp/ubridge-influx.log", loguru::Truncate, loguru::Verbosity_INFO);
@@ -189,9 +187,7 @@ int main(int argc, char *argv[])
 		std::this_thread::sleep_for(std::chrono::milliseconds(3000));
 	}
 
-	//DM testing
 	pInfluxClient = &influxClient;
-	// influxClient.Write("testDev", jconfig);
 		
 	json deviceList;
 	uBridgeClient.getDevices(deviceList);

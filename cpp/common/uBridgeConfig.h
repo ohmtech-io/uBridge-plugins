@@ -34,12 +34,11 @@ namespace ubridge {
 			/* NOTE: define a custom path base for the USB devices (if a udev rule is installed for this
 			reason, or the kernel driver assigns anything different than ttyACM* or ttyUSB*)
 			*/
-	        // std::string devNameBase = "/dev/ttyUTHING";
 	        std::string devNameBase = "/dev/ttyACM";
 	        // std::string devNameBase = ""; //leaving an empty string looks for /dev/ttyACM* and /dev/ttyUSB*
 
 	        int maxDevices = 10;
-	        // const char* configSockUrl= "ipc:///tmp/ubridgeReqResp";
+	        
 	        std::string configSockUrl= "ipc:///tmp/ubridgeReqResp";
 	        // const char* configSockUrl= "tcp://localhost:8001";
 	        std::string streamSockUrl= "ipc:///tmp/ubridgeStream";
