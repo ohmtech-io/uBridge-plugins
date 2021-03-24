@@ -10,7 +10,7 @@
 	"csv":  /* configuration for the InfluxDB side: */
 	{
 		"logPath" : "/tmp/uThingData",/* The base path for storing the CSV files, change to "/home/$USER/$(FINAL_PATH)*/
-		"maxDatapointsPerFile" : 10000,/* Limit the logged data to a manageable size
+		"maxDatapointsPerFile" : 100000,/* Limit the logged data to a manageable size
 									when this limit is reached, a new file is created */
 		"useGmtTime" : true,/* if false will use localtime*/
 		"outTimestampInMs" : false/* default timestapmp format is unix epoch in milliseconds, 

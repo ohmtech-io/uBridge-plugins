@@ -58,10 +58,11 @@ public:
 	int Write(std::string deviceId, nlohmann::json jdata);
 
 private:
-	int CreateFile(std::string deviceId, nlohmann::json jdata);
+	int CreateFile(uThing_t* uThing, std::string deviceId);
 	std::string GetCurrentTimeForFileName();
 	std::string GetCurrentTimeForLogging();
-
+	
+	void WriteHeader(uThing_t* uThing, json& jdata);
 	std::string GetCommaSeparatedValues(nlohmann::json& jdata);
 	std::filesystem::path AppendTimeToFileName(const std::filesystem::path& fileName);
 	std::filesystem::path GetFullPath(std::string deviceId);

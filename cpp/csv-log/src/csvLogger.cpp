@@ -110,30 +110,63 @@ long CsvLogger::GetTimestampInMs()
 int	CsvLogger::Write(std::string deviceId, json jdata) 
 {	
 	if (devices.find(deviceId) == devices.end()) {
-		/* the device doesn't exist (first time seen)*/
-		CreateFile(deviceId, jdata);
+		/* the device doesn't exist (first time seen)*/	
+		uThing_t uThing;
+	
+		CreateFile(&uThing, deviceId);
+
+		uThing.datapointsWritten = 0;
+		LOG_S(INFO) << "New device detected, writing data in: "<< uThing.filePath;
+
+		uThing.startTime = std::chrono::system_clock::now();
+
+		WriteHeader(&uThing, jdata);
+
+		/* add the device to the list */
+		devices.emplace(deviceId, std::move(uThing));
 	} 
 
-	LOG_S(9) << "data" << jdata;
-	LOG_S(INFO) << GetCommaSeparatedValues(jdata);
+	std::string valuesStr = GetCommaSeparatedValues(jdata);
+	LOG_S(6) << valuesStr;
 
-	// we need to make a list with the deviceIds
-	// then compose a csv file name with devId+datetime
-	// if this file exist, append data 
- // 	else, create file and add the format on the first line ie [noise_rms], [noise_peak], [noise_base], [pir_detections], [pir_lastHourD], [light_last], [light_average]
+	uThing_t* device = &devices.at(deviceId);
+
+	if (++device->datapointsWritten > m_maxDatapointsPerFile) {
+		//we've reached the configured limit, so we create a new file to keep logging
+		std::string oldPath = device->filePath;
+
+		CreateFile(device, deviceId);
+
+		device->datapointsWritten = 0;
+		WriteHeader(device, jdata);
+
+		LOG_S(INFO) << "The file " << oldPath
+			<< " reached the "<< m_maxDatapointsPerFile <<" datapoints,"
+			<< "data is now being stored in " << device->filePath;
+	}
+
+	//open the file in Append mode so the latest value is added at the end
+	device->streamFile.open(device->filePath, std::ios::out | std::ios::app);
+	device->streamFile << valuesStr;
+	device->streamFile.close();
 
 	return 0;
 }
 
-int CsvLogger::CreateFile(std::string deviceId, json jdata)
+void CsvLogger::WriteHeader(uThing_t* uThing, json& jdata)
 {
-	uThing_t uThing;
+	std::string dataHeader = GetFormatHeader(jdata);
+	LOG_S(5) << "CSV Data Header: "<< dataHeader;
 
-	uThing.filePath = GetFullPath(deviceId);
+	//Write CSV header
+	uThing->streamFile.open(uThing->filePath);
+	uThing->streamFile << dataHeader;
+	uThing->streamFile.close();
+}
 
-	LOG_S(INFO) << "New device detected, writing data in: "<< uThing.filePath;
-
-	uThing.startTime = std::chrono::system_clock::now();
+int CsvLogger::CreateFile(uThing_t* uThing, std::string deviceId)
+{
+	uThing->filePath = GetFullPath(deviceId);
 
 	try {
 		fs::create_directory(m_logPath);
@@ -141,16 +174,6 @@ int CsvLogger::CreateFile(std::string deviceId, json jdata)
 	catch (const std::exception& ex) {
 		LOG_S(WARNING) << "Error trying to create the configured directory: " << ex.what();
 	}
-
-	std::string dataHeader = GetFormatHeader(jdata);
-	LOG_S(5) << "CSV Data Header: "<< dataHeader;
-
-	uThing.streamFile.open (uThing.filePath);
-	uThing.streamFile << dataHeader;
-	uThing.streamFile.close();
-
-	devices.emplace(deviceId, std::move(uThing));
-
 	return 0;
 }
 
@@ -176,6 +199,8 @@ std::string CsvLogger::GetCommaSeparatedValues(json& jdata) {
 	} else {
 		line += GetCurrentTimeForLogging();
 	}
+
+	line += "\n";
 
 	LOG_S(6) << "CSV data: "<< line;
 
