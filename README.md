@@ -3,9 +3,16 @@ Client applications that acts as plugins for the uBridge server
 
 ## Dependencies
 (TODO: specific versions on Ubunty and RPi, find common?)
+### in Ubuntu & Debian
 ```
 sudo apt-get install libcurl-dev 
 ```
+
+### in Raspberry Pi
+```
+sudo apt-get install libcurl4-openssl-dev
+```
+
 ## Building
 ```
 git clone --recursive https://github.com/damancusonqn/ubridge-plugins.git
