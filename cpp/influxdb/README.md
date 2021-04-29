@@ -1,7 +1,7 @@
 # ubridge InfluxDB2.0 plugin
 Client applications that acts as plugins for the uBridge server, subscribing to data from the uThing sensor units and publishing the data into an InfluxDB instance.
 
-*NOTE:* The application uses the "wire" protocol from InfluxDB. The Influx instance can be running on the same host of the __ubridge__ application or on a remote server. For authentication, uses the org/token pair generated from the Influx admin panel.
+__NOTE:__ The application uses the "wire" protocol from InfluxDB. The Influx instance can be running on the same host of the _ubridge_ application or on a remote server. For authentication, uses the org/token pair generated from the Influx admin panel.
 
 ## Dependencies - LibCurl 
 (TODO: specific versions on Ubunty and RPi, find common?)
