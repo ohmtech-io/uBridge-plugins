@@ -17,7 +17,7 @@ sudo apt-get install libcurl4-openssl-dev
 
 ## Building
 ```
-git clone --recursive https://github.com/damancusonqn/ubridge-plugins.git
+git clone --recursive https://github.com/ohmtech-io/uBridge-plugins.git
 
 cd ubridge-plugins/cpp/influxdb
 mkdir build 

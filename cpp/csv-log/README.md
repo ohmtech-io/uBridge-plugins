@@ -4,7 +4,7 @@ Client application that acts as plugin for the uBridge server, subscribing to da
 __NOTE__: the location of the logged files, and format configuration can be changed on the _csv-pluging-config.json_ file.
 ## Clone the repository
 ```
-git clone --recursive https://github.com/damancusonqn/ubridge-plugins.github
+git clone --recursive https://github.com/ohmtech-io/uBridge-plugins.git
 ```
 
 ## Building
