@@ -6,6 +6,7 @@ __NOTE__: the location of the logged files, and format configuration can be chan
 ```
 git clone --recursive https://github.com/ohmtech-io/uBridge-plugins.git
 ```
+(or 'git submodule init' if you've cloned it without the --recursive)
 
 ## Building
 ```

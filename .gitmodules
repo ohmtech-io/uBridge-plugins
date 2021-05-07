@@ -7,3 +7,6 @@
 [submodule "cpp/3dparty/cxxopts"]
 	path = cpp/3dparty/cxxopts
 	url = https://github.com/jarro2783/cxxopts.git
+[submodule "cpp/3dparty/paho.mqtt.cpp"]
+	path = cpp/3dparty/paho.mqtt.cpp
+	url = https://github.com/eclipse/paho.mqtt.cpp.git

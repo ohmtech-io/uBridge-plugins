@@ -7,7 +7,7 @@
 						more efficient. If a different host is used (as with a client running in a Docker instance)
 						use TCP host:port ("tcp://localhost:8001")*/
 	},
-	"csv":  /* configuration for the CSV logging files: */
+	"mqtt":  /* configuration for the MQTT side: */
 	{
 		"logPath" : "/tmp/uThingData",/* The base path for storing the CSV files, change to "/home/$USER/$(FINAL_PATH)*/
 		"maxDatapointsPerFile" : 100000,/* Limit the logged data to a manageable size
