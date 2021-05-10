@@ -45,7 +45,8 @@
 using json = nlohmann::json;
 
 ubridge::Config cfg;
-CsvLogger* pCsvLogger; 
+MQTTclient* pMqttClient; 
+// mqtt::async_client_ptr client;
 
 void subsMessageHandler(ubridge::message& message) {
 	LOG_S(9) << "cb msg: " << message.topic << message.data ;
@@ -60,7 +61,7 @@ void subsMessageHandler(ubridge::message& message) {
  	}
 
  	LOG_S(9) << "deviceId: " << deviceId;
-	pCsvLogger->Write(deviceId, message.data);
+	pMqttClient->publish(deviceId, message.data);
 }
 
 json loadConfigFile(std::string& config_file){
@@ -103,25 +104,25 @@ ubridge::Config loadBridgeConfig(json& jconfig) {
 	return config;
 }
 
-csvConfig_t loadCsvConfig(json& jconfig) {
-	csvConfig_t config;
+mqttConfig_t loadMqttConfig(json& jconfig) {
+	mqttConfig_t config;
 	
-	if (jconfig.contains("logPath")) {
-		config.logPath = jconfig.at("logPath");
-		LOG_S(7) << "CSV logger path: " << config.logPath;
+	if (jconfig.contains("mqttServerAddress")) {
+		config.mqttServerAddress = jconfig.at("mqttServerAddress");
+		LOG_S(7) << "MQTT Server Address: " << config.mqttServerAddress;
 	}
-	if (jconfig.contains("maxDatapointsPerFile")) {
-		config.maxDatapointsPerFile = jconfig.at("maxDatapointsPerFile");
-		LOG_S(7) << "Datapoints limit per file: " << config.maxDatapointsPerFile;
+	if (jconfig.contains("baseTopic")) {
+		config.baseTopic = jconfig.at("baseTopic");
+		LOG_S(7) << "MQTT Base topic: " << config.baseTopic;
 	}
-	if (jconfig.contains("useGmtTime")) {
-		config.useGmtTime = jconfig.at("useGmtTime");
-		std::string x = config.useGmtTime?"UTC":"local";
-		LOG_S(7) << "Using "<< x <<" time.";
+	if (jconfig.contains("clientId")) {
+		config.clientId = jconfig.at("clientId");
+		LOG_S(7) << "MQTT Client ID: " << config.clientId;
 	}
-	if (jconfig.contains("outTimestampInMs")) {
-		config.outTimestampInMs = jconfig.at("outTimestampInMs");
-		std::string x = config.outTimestampInMs?"Timestamp written in unix epoch (milliseconds)":"Timestamp written in date-time format";
+
+	if (jconfig.contains("breakDownJson")) {
+		config.breakDownJson = jconfig.at("breakDownJson");
+		std::string x = config.breakDownJson?"Each datapoint will be sent in a different topic":"Entire JSON published in a message";
 		LOG_S(7) << x;
 	}
 
@@ -130,8 +131,8 @@ csvConfig_t loadCsvConfig(json& jconfig) {
 
 int main(int argc, char *argv[])
 {
-	cxxopts::Options options("CsvPluggin", "This plugin app. acts as a client of ubridge, \
-			subscribing to data from the sensors and publish date into an MQTT Broker");
+	cxxopts::Options options("MQTTPluggin", "This plugin app. acts as a client of ubridge, \
+			subscribing to data from the sensors and publish data into an MQTT Broker");
 
     options.add_options()
    		("c,config", "JSON configuration file name", cxxopts::value<std::string>()->default_value("/etc/ubridge/mqtt-plugin-config.json"))
@@ -173,7 +174,7 @@ int main(int argc, char *argv[])
 	//parse the uBridge config:
 	ubridge::Config bridgeConfig = loadBridgeConfig(jconfig["ubridge"]);
 	//parse the CSV config:
-	csvConfig_t csvConfig = loadCsvConfig(jconfig["mqtt"]);
+	mqttConfig_t mqttConfig = loadMqttConfig(jconfig["mqtt"]);
 
 	ReqRepClient uBridgeClient{bridgeConfig.configSockUrl, bridgeConfig.streamSockUrl.c_str()};	
 	
@@ -181,55 +182,55 @@ int main(int argc, char *argv[])
 
 	// using namespace std;
 
-	const std::string DFLT_SERVER_ADDRESS { "tcp://broker.hivemq.com:1883" };
+	// const std::string DFLT_SERVER_ADDRESS { "tcp://broker.hivemq.com:1883" };
 
-	const std::string TOPIC { "utest" };
-	const int QOS = 1;
+	// const std::string TOPIC { "utest" };
+	// const int QOS = 1;
 
-	const char* PAYLOADS[] = {
-		"Hello World!",
-		"Hi there!",
-		"Is anyone listening?",
-		"Someone is always listening.",
-		nullptr
-	};
+	// const char* PAYLOADS[] = {
+	// 	"Hello World!",
+	// 	"Hi there!",
+	// 	"Is anyone listening?",
+	// 	"Someone is always listening.",
+	// 	nullptr
+	// };
 
-	const auto TIMEOUT = std::chrono::seconds(10);
+	// const auto TIMEOUT = std::chrono::seconds(10);
 
-	// http://www.hivemq.com/demos/websocket-client/
-	std::string address = DFLT_SERVER_ADDRESS;
+	// // http://www.hivemq.com/demos/websocket-client/
+	// std::string address = DFLT_SERVER_ADDRESS;
 
-	std::cout << "Initializing for server '" << address << "'..." << std::endl;
-	mqtt::async_client cli(address, "");
+	// std::cout << "Initializing for server '" << address << "'..." << std::endl;
+	// mqtt::async_client cli(address, "");
 
-	std::cout << "  ...OK" << std::endl;
+	// std::cout << "  ...OK" << std::endl;
 
-	try {
-		std::cout << "\nConnecting..." << std::endl;
-		cli.connect()->wait();
-		std::cout << "  ...OK" << std::endl;
+	// try {
+	// 	std::cout << "\nConnecting..." << std::endl;
+	// 	cli.connect()->wait();
+	// 	std::cout << "  ...OK" << std::endl;
 
-		std::cout << "\nPublishing messages..." << std::endl;
+	// 	std::cout << "\nPublishing messages..." << std::endl;
 
-		mqtt::topic top(cli, "utest", QOS);
-		mqtt::token_ptr tok;
+	// 	mqtt::topic top(cli, "utest", QOS);
+	// 	mqtt::token_ptr tok;
 
-		size_t i = 0;
-		while (PAYLOADS[i]) {
-			tok = top.publish(PAYLOADS[i++]);
-		}
-		tok->wait();	// Just wait for the last one to complete.
-		std::cout << "OK" << std::endl;
+	// 	size_t i = 0;
+	// 	while (PAYLOADS[i]) {
+	// 		tok = top.publish(PAYLOADS[i++]);
+	// 	}
+	// 	tok->wait();	// Just wait for the last one to complete.
+	// 	std::cout << "OK" << std::endl;
 
-		// Disconnect
-		std::cout << "\nDisconnecting..." << std::endl;
-		cli.disconnect()->wait();
-		std::cout << "  ...OK" << std::endl;
-	}
-	catch (const mqtt::exception& exc) {
-		std::cerr << exc << std::endl;
-		return 1;
-	}
+	// 	// Disconnect
+	// 	std::cout << "\nDisconnecting..." << std::endl;
+	// 	cli.disconnect()->wait();
+	// 	std::cout << "  ...OK" << std::endl;
+	// }
+	// catch (const mqtt::exception& exc) {
+	// 	std::cerr << exc << std::endl;
+	// 	return 1;
+	// }
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	/* check uBridge side: */	
@@ -243,15 +244,24 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	CsvLogger csvLogger{csvConfig};
-	pCsvLogger = &csvLogger;
+	
+	LOG_S(INFO) << "client";	
+	mqtt::async_client client(mqttConfig.mqttServerAddress, mqttConfig.clientId);
+
+	// client = std::make_shared<mqtt::async_client>(mqttConfig.mqttServerAddress, mqttConfig.clientId);
+
+	LOG_S(INFO) << "mqttClient";
+	MQTTclient mqttClient(mqttConfig, client);
+	pMqttClient = &mqttClient;
+
+	pMqttClient->connect();
 		
 	json deviceList;
 	uBridgeClient.getDevices(deviceList);
 
 	LOG_S(INFO) << deviceList["devCount"] << " devices detected. Details:" << std::setw(2) << deviceList["devices"];	
 	
-	LOG_S(INFO) << "Start logging CSV data into " << csvConfig.logPath << "/*.csv...";
+	// LOG_S(INFO) << "Start logging CSV data into " << csvConfig.logPath << "/*.csv...";
 	//start message receiving loop...
 	uBridgeClient.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
 	

@@ -1,4 +1,4 @@
-/* --CSV Plugin configuration file--. NOTE: The format is JSON-like, with the optional comment blocks*/
+/* --MQTT Plugin configuration file--. NOTE: The format is JSON-like, with the optional comment blocks*/
 {
 	"ubridge": /* socket configuration for the uBridge side: */
 	{
@@ -9,11 +9,10 @@
 	},
 	"mqtt":  /* configuration for the MQTT side: */
 	{
-		"logPath" : "/tmp/uThingData",/* The base path for storing the CSV files, change to "/home/$USER/$(FINAL_PATH)*/
-		"maxDatapointsPerFile" : 100000,/* Limit the logged data to a manageable size
-									when this limit is reached, a new file is created */
-		"useGmtTime" : true,/* if false will use localtime*/
-		"outTimestampInMs" : false/* default timestapmp format is unix epoch in milliseconds, 
-	 						if false use date-time (UTC or local depending on "useGmtTime" */
+		"mqttServerAddress" : "tcp://broker.hivemq.com:1883",/* The MQTT address and port*/
+		"baseTopic" : "v1/uThing",/* base topic, the device name and measurements will follow */
+		"clientId" : "uBridgeMqttPlugin",/* client ID name*/
+		"breakDownJson" : false/* True: each datapoint is Published in a different topic.
+								False: the entire JSON is sent in a single Publish*/
 	}
 }
