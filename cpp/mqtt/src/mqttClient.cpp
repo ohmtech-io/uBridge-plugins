@@ -51,6 +51,8 @@ MQTTclient::MQTTclient(mqttConfig_t& config, mqtt::iasync_client &client) {
 	m_baseTopic = config.baseTopic;
 	m_clientId = config.clientId;
 	m_breakDownJson = config.breakDownJson;
+	m_username = config.username;
+	m_password = config.password;
 
 	p_client = &client;
 
@@ -58,10 +60,17 @@ MQTTclient::MQTTclient(mqttConfig_t& config, mqtt::iasync_client &client) {
 
 
 int MQTTclient::connect() {
-	//tODO: add connection options (auto-reconnect)
 	try {
-		LOG_S(INFO) << "MQTT: connecting to server: " << m_mqttServerAddress;
-		p_client->connect()->wait();
+		auto connOpts = mqtt::connect_options_builder()
+			.user_name(m_username)
+			.password(m_password)
+			.keep_alive_interval(std::chrono::seconds(30))
+			.automatic_reconnect(std::chrono::seconds(2), std::chrono::seconds(30))
+			.clean_session(false)
+			.finalize();
+
+		LOG_S(INFO) << "Connecting to broker: " << m_mqttServerAddress;
+		p_client->connect(connOpts)->wait();
 		LOG_S(INFO) << "Connected!";
 	}	
 	catch (const mqtt::exception& exc) {

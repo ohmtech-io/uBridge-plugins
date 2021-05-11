@@ -10,6 +10,8 @@
 	"mqtt":  /* configuration for the MQTT side: */
 	{
 		"mqttServerAddress" : "tcp://broker.hivemq.com:1883",/* The MQTT address and port*/
+		"username" : "",/* username (in some platforms a token is provided here for authentication purposes)*/
+		"password" : "",/* mqtt password (if provided), depends on broker */
 		"baseTopic" : "v1/uThing",/* base topic, the device name and measurements will follow */
 		"clientId" : "uBridgeMqttPlugin",/* client ID name*/
 		"breakDownJson" : false/* True: each datapoint is Published in a different topic.

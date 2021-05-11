@@ -30,6 +30,8 @@
 struct mqttConfig_t
 {
 	std::string mqttServerAddress;
+	std::string username;
+	std::string password;
 	std::string baseTopic;
 	std::string clientId;
 	bool breakDownJson;
@@ -48,6 +50,8 @@ private:
 	std::string m_mqttServerAddress;
 	std::string m_baseTopic;
 	std::string m_clientId;
+	std::string m_username;
+	std::string m_password;
 	bool m_breakDownJson;
 
 	// mqtt::async_client* client;

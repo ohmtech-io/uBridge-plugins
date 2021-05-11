@@ -46,7 +46,6 @@ using json = nlohmann::json;
 
 ubridge::Config cfg;
 MQTTclient* pMqttClient; 
-// mqtt::async_client_ptr client;
 
 void subsMessageHandler(ubridge::message& message) {
 	LOG_S(9) << "cb msg: " << message.topic << message.data ;
@@ -110,6 +109,14 @@ mqttConfig_t loadMqttConfig(json& jconfig) {
 	if (jconfig.contains("mqttServerAddress")) {
 		config.mqttServerAddress = jconfig.at("mqttServerAddress");
 		LOG_S(7) << "MQTT Server Address: " << config.mqttServerAddress;
+	}
+	if (jconfig.contains("username")) {
+		config.username = jconfig.at("username");
+		LOG_S(7) << "MQTT client's User name: " << config.username;
+	}
+	if (jconfig.contains("password")) {
+		config.password = jconfig.at("password");
+		LOG_S(7) << "MQTT password: " << config.password;
 	}
 	if (jconfig.contains("baseTopic")) {
 		config.baseTopic = jconfig.at("baseTopic");
@@ -178,61 +185,6 @@ int main(int argc, char *argv[])
 
 	ReqRepClient uBridgeClient{bridgeConfig.configSockUrl, bridgeConfig.streamSockUrl.c_str()};	
 	
-	////////////////////////////////////////////////////////////////////////////////////////
-
-	// using namespace std;
-
-	// const std::string DFLT_SERVER_ADDRESS { "tcp://broker.hivemq.com:1883" };
-
-	// const std::string TOPIC { "utest" };
-	// const int QOS = 1;
-
-	// const char* PAYLOADS[] = {
-	// 	"Hello World!",
-	// 	"Hi there!",
-	// 	"Is anyone listening?",
-	// 	"Someone is always listening.",
-	// 	nullptr
-	// };
-
-	// const auto TIMEOUT = std::chrono::seconds(10);
-
-	// // http://www.hivemq.com/demos/websocket-client/
-	// std::string address = DFLT_SERVER_ADDRESS;
-
-	// std::cout << "Initializing for server '" << address << "'..." << std::endl;
-	// mqtt::async_client cli(address, "");
-
-	// std::cout << "  ...OK" << std::endl;
-
-	// try {
-	// 	std::cout << "\nConnecting..." << std::endl;
-	// 	cli.connect()->wait();
-	// 	std::cout << "  ...OK" << std::endl;
-
-	// 	std::cout << "\nPublishing messages..." << std::endl;
-
-	// 	mqtt::topic top(cli, "utest", QOS);
-	// 	mqtt::token_ptr tok;
-
-	// 	size_t i = 0;
-	// 	while (PAYLOADS[i]) {
-	// 		tok = top.publish(PAYLOADS[i++]);
-	// 	}
-	// 	tok->wait();	// Just wait for the last one to complete.
-	// 	std::cout << "OK" << std::endl;
-
-	// 	// Disconnect
-	// 	std::cout << "\nDisconnecting..." << std::endl;
-	// 	cli.disconnect()->wait();
-	// 	std::cout << "  ...OK" << std::endl;
-	// }
-	// catch (const mqtt::exception& exc) {
-	// 	std::cerr << exc << std::endl;
-	// 	return 1;
-	// }
-
-	////////////////////////////////////////////////////////////////////////////////////////
 	/* check uBridge side: */	
 	LOG_S(INFO) << "Pinging uBridge server..." ;
 	if (uBridgeClient.connect() != 0) {
@@ -245,12 +197,9 @@ int main(int argc, char *argv[])
 	}
 
 	
-	LOG_S(INFO) << "client";	
+	LOG_S(INFO) << "Starting MQTT client.";	
 	mqtt::async_client client(mqttConfig.mqttServerAddress, mqttConfig.clientId);
 
-	// client = std::make_shared<mqtt::async_client>(mqttConfig.mqttServerAddress, mqttConfig.clientId);
-
-	LOG_S(INFO) << "mqttClient";
 	MQTTclient mqttClient(mqttConfig, client);
 	pMqttClient = &mqttClient;
 
