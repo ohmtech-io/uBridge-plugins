@@ -14,7 +14,7 @@
 		"password" : "",/* mqtt password (if provided), depends on broker */
 		"baseTopic" : "v1/uThing",/* base topic, the device name and measurements will follow */
 		"clientId" : "uBridgeMqttPlugin",/* client ID name*/
-		"breakDownJson" : false/* True: each datapoint is Published in a different topic.
+		"breakDownJson" : true/* True: each datapoint is Published in a different topic.
 								False: the entire JSON is sent in a single Publish*/
 	}
 }

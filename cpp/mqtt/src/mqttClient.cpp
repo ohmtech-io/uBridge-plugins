@@ -74,7 +74,23 @@ int MQTTclient::connect() {
 int MQTTclient::publish(std::string deviceId, json jdata) {	
 
 	if (m_breakDownJson) {
+		/* Flat the entire json objects so we can easily iterate it, 
+			for example:
+			{"noise":{"rms":33.5,"peak":33.5,"base":30.4},"pir":{"detections":0,"detPerHour":6},"light":{"last":58.13,"average":51.67}}
+		after json.flatten():
+ 		{"/light/average":51.67,"/light/last":58.13,"/noise/base":30.4,"/noise/peak":33.5,"/noise/rms":33.5,"/pir/detPerHour":6,"/pir/detections":0}
+		*/
+		json flat_jdata = jdata.flatten();
 
+		for (auto& [key, value] : flat_jdata.items()) {
+  			LOG_S(8) << key << " : " << value;
+
+  			std::string s_topic =  m_baseTopic + "/" + deviceId + key;
+  			mqtt::topic top(*p_client, s_topic, QOS);
+  			top.publish(value.dump());
+  			
+  			std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		}
 	} else {
 		LOG_S(6) << "Publishing: " << deviceId << jdata;
 		mqtt::topic top(*p_client, m_baseTopic + "/" +  deviceId, QOS);
