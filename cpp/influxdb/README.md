@@ -39,18 +39,6 @@ sudo systemctl start ubridge
 systemctl status ubridge-influx-plugin.service
 ```
 
-### mosquito_sub client CLI
-We can use the "mosquitto" client to connect to the broker and subscribe to the messages that the plugin is publishing...
-
-```
-sudo apt-get install mosquitto-clients
-```
-
-Then we can run it providing the url, port and we use the wildcard # to subscribe to those topics. The "-v" option shows the topic also. For example:
-
-```
-mosquitto_sub -h broker.hivemq.com -p 1883 -v -t "v1/uThing/#"
-```
 ### Log file
 ```
 tail /tmp/ubridge-influx.log

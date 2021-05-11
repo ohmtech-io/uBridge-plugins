@@ -7,6 +7,7 @@ Client applications that acts as plugins for the uBridge server
 git clone --recursive https://github.com/ohmtech-io/uBridge-plugins.git
 ```
 
-__NOTE__: For building and installation instructions, check the README corresponding to each plugin.
+## Build and install the desired plugins
+For building and installation instructions, check the README corresponding to each plugin.
 
 More documentation on: https://docs.ohmtech.io 
