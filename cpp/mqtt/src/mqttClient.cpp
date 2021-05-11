@@ -38,14 +38,6 @@ using json = nlohmann::json;
 
 const int QOS = 1;
 
-	const char* PAYLOADS[] = {
-		"Hello World!",
-		"Hi there!",
-		"Is anyone listening?",
-		"Someone is always listening.",
-		nullptr
-	};
-
 MQTTclient::MQTTclient(mqttConfig_t& config, mqtt::iasync_client &client) {
 	m_mqttServerAddress = config.mqttServerAddress;
 	m_baseTopic = config.baseTopic;
@@ -57,7 +49,6 @@ MQTTclient::MQTTclient(mqttConfig_t& config, mqtt::iasync_client &client) {
 	p_client = &client;
 
 }
-
 
 int MQTTclient::connect() {
 	try {
@@ -93,7 +84,6 @@ int MQTTclient::publish(std::string deviceId, json jdata) {
 	}
 	return 0;
 }
-
 
 std::string MQTTclient::ReformatKey(std::string key) {
 	//example flattened keys: "/light/average", "/temperature"

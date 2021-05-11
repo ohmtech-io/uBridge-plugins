@@ -12,10 +12,6 @@ add_compile_options(-DLOGURU_WITH_STREAMS)
 link_directories("/usr/local/lib")
 set(LIBS -lrt -lnng -lpthread -ldl -lstdc++fs -latomic -lpaho-mqtt3as -lpaho-mqttpp3 ) #stdc++fs and atomic is needed for GCC8.x 
 
-# set(PAHO_CPP_LIB libpaho-mqttpp3)
-# set(PAHO_MQTT_CPP paho-mqttpp3)
-# set(PAHO_MQTT_C paho-mqtt3a)
-
 add_executable(mqtt-plugin
 	../3dparty/loguru/loguru.cpp
 	src/main.cpp

@@ -26,20 +26,11 @@
 #include <chrono>
 
 #include <cxxopts.hpp>
+#include "mqtt/async_client.h"
 
 #include "uBridgeConfig.h"
 #include "ubridgeClient.h"
 #include "mqttClient.h"
-
-////////////
-	#include <iostream>
-	#include <cstdlib>
-	#include <string>
-	#include <thread>	// For sleep
-	#include <atomic>
-	#include <chrono>
-	#include <cstring>
-	#include "mqtt/async_client.h"
 
 // for convenience
 using json = nlohmann::json;
@@ -126,7 +117,6 @@ mqttConfig_t loadMqttConfig(json& jconfig) {
 		config.clientId = jconfig.at("clientId");
 		LOG_S(7) << "MQTT Client ID: " << config.clientId;
 	}
-
 	if (jconfig.contains("breakDownJson")) {
 		config.breakDownJson = jconfig.at("breakDownJson");
 		std::string x = config.breakDownJson?"Each datapoint will be sent in a different topic":"Entire JSON published in a message";
@@ -196,7 +186,6 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	
 	LOG_S(INFO) << "Starting MQTT client.";	
 	mqtt::async_client client(mqttConfig.mqttServerAddress, mqttConfig.clientId);
 
@@ -210,7 +199,7 @@ int main(int argc, char *argv[])
 
 	LOG_S(INFO) << deviceList["devCount"] << " devices detected. Details:" << std::setw(2) << deviceList["devices"];	
 	
-	// LOG_S(INFO) << "Start logging CSV data into " << csvConfig.logPath << "/*.csv...";
+	LOG_S(INFO) << "Start forwarding received messages into MQTT...";
 	//start message receiving loop...
 	uBridgeClient.subscribe("/sensors", subsMessageHandler); //subscribe to all sensors
 	
