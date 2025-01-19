@@ -26,7 +26,7 @@
 
 #include <string>
 #include <curl/curl.h>
-#include <nlohmann/json.hpp>
+//#include <nlohmann/json.hpp>
 #include "loguru.hpp"
 
 struct thingsboardConfig_t {
@@ -60,12 +60,16 @@ public:
         }
     }
 
-    bool sendTelemetry(const std::string& deviceId, const std::string& jsonData) {
+    // bool sendTelemetry(const std::string& deviceId, const std::string& jsonData) {
+    bool sendTelemetry(const std::string& deviceId, json jsonData) {
         if (!curl) {
             LOG_S(ERROR) << "CURL not initialized";
             return false;
         }
 
+        LOG_S(9) << "JSON_DATA: " << jsonData.dump();  // Log the actual JSON being sent
+        
+        std::string jsonStr = jsonData.dump();
         // Construct the URL for the device
         std::string url = config.serverUrl + "/api/v1/" + config.accessToken + "/telemetry";
 
@@ -77,7 +81,7 @@ public:
 
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonData.c_str());
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, jsonStr.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 

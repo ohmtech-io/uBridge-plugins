@@ -10,12 +10,12 @@ add_compile_options(-Wall -O3 -Wno-format-truncation -Wno-psabi ) #no-psabi supp
 add_compile_options(-DLOGURU_WITH_STREAMS)
 
 link_directories("/usr/local/lib")
-set(LIBS -lrt -lnng -lpthread -ldl -lstdc++fs -latomic) #stdc++fs and atomic is needed for GCC8.x 
+set(LIBS -lrt -lnng -lpthread -ldl -lstdc++fs -latomic -lcurl) #stdc++fs and atomic is needed for GCC8.x 
 
 add_executable(thingsboard-plugin
 	../3dparty/loguru/loguru.cpp
 	src/main.cpp
-	src/thingsboard.cpp
+#	src/thingsboard.cpp
 )
 
 target_include_directories(thingsboard-plugin PUBLIC 
