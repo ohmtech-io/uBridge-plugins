@@ -1,0 +1,14 @@
+/* --ThingsBoard Plugin configuration file--. NOTE: The format is JSON-like, with the optional comment blocks*/
+{
+	"ubridge": /* socket configuration for the uBridge side: */
+	{
+		"configSockUrl" : "ipc:///tmp/ubridgeReqResp",/* The sockets for the Request Response Server and data Streamer*/
+		"streamSockUrl" : "ipc:///tmp/ubridgeStream"/* If the client app runs in the same machine, IPC is 
+						more efficient. If a different host is used (as with a client running in a Docker instance)
+						use TCP host:port ("tcp://localhost:8001")*/
+	},
+    "thingsboard": {
+        "serverUrl": "127.0.0.1:8081", //"http://your-thingsboard-server:8080",
+        "accessToken": "xO8dDqehbg6DfhDMmqad" //uThing::VOC
+    }
+}
